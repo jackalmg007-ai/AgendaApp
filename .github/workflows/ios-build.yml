@@ -1,0 +1,46 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-simulator:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build for iOS Simulator
+        run: |
+          xcodebuild \
+            -project AgendaApp.xcodeproj \
+            -scheme AgendaApp \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package simulator app
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -path '*Build/Products/Debug-iphonesimulator/AgendaApp.app' -print -quit)
+          mkdir -p artifacts
+          ditto "$APP_PATH" artifacts/AgendaApp.app
+          ditto -c -k --sequesterRsrc --keepParent artifacts/AgendaApp.app artifacts/AgendaApp-Simulator.zip
+
+      - name: Upload simulator artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgendaApp-iOS-Simulator
+          path: artifacts/AgendaApp-Simulator.zip
