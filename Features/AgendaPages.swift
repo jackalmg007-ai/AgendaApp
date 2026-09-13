@@ -2,79 +2,19 @@ import SwiftUI
 
 struct AgendaSpread: View {
     @Environment(AgendaState.self) private var state
-    @State private var flipProgress: CGFloat = 0
 
     var body: some View {
-        GeometryReader { proxy in
-            let pageSize = CGSize(width: max((proxy.size.width - 46) / 2, 180), height: max(proxy.size.height - 36, 260))
-
-            ZStack {
-                HStack(spacing: 12) {
-                    currentPage(isLeft: true)
-                    currentPage(isLeft: false)
+        PhysicalPageBook(
+            state: state,
+            currentSpread: Binding(
+                get: {
+                    state.currentSpread
+                },
+                set: {
+                    state.currentSpread = $0
                 }
-                .frame(width: pageSize.width * 2 + 12, height: pageSize.height)
-
-                if flipProgress > 0.001 {
-                    PageFlipEngine(progress: flipProgress) {
-                        page(isLeft: false, section: state.section, spread: state.currentSpread)
-                    } back: {
-                        page(isLeft: false, section: state.section, spread: state.currentSpread + 1)
-                    }
-                    .frame(width: pageSize.width, height: pageSize.height)
-                    .position(x: proxy.size.width / 2 + pageSize.width / 2 + 6,
-                              y: proxy.size.height / 2)
-                    .zIndex(4)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 18)
-                    .onChanged { value in
-                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                        let p = min(max(-value.translation.width / max(pageSize.width, 1), 0), 1)
-                        flipProgress = p
-                    }
-                    .onEnded { value in
-                        guard abs(value.translation.width) > abs(value.translation.height) else {
-                            flipProgress = 0
-                            return
-                        }
-                        let forward = value.translation.width < -90 || value.predictedEndTranslation.width < -150
-                        withAnimation(.easeOut(duration: 0.36)) {
-                            flipProgress = forward ? 1 : 0
-                        }
-                        if forward {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
-                                state.currentSpread += 1
-                                flipProgress = 0
-                            }
-                        }
-                    }
             )
-        }
-    }
-
-    @ViewBuilder
-    private func currentPage(isLeft: Bool) -> some View {
-        page(isLeft: isLeft, section: state.section, spread: state.currentSpread)
-    }
-
-    @ViewBuilder
-    private func page(isLeft: Bool, section: AgendaState.Section, spread: Int) -> some View {
-        switch section {
-        case .day:
-            DayPage(isLeft: isLeft, spread: spread)
-        case .week:
-            WeekPage(isLeft: isLeft, spread: spread)
-        case .month:
-            MonthPage(isLeft: isLeft, spread: spread)
-        case .notes:
-            NotesPage(isLeft: isLeft, spread: spread)
-        case .todo:
-            TodoPage(isLeft: isLeft, spread: spread)
-        }
+        )
     }
 }
 
