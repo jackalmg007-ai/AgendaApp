@@ -32,6 +32,32 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
+      - name: Test install and launch on Simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | grep -m 1 "iPhone 16" | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/')
+
+          echo "DEVICE_ID=$DEVICE_ID"
+
+          xcrun simctl boot "$DEVICE_ID" || true
+
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData \
+            -path '*Build/Products/Debug-iphonesimulator/AgendaApp.app' \
+            -print -quit)
+
+          echo "APP_PATH=$APP_PATH"
+
+          echo "=== Installing AgendaApp ==="
+          xcrun simctl install "$DEVICE_ID" "$APP_PATH"
+
+          echo "=== INSTALL SUCCESS ==="
+
+          echo "=== Launching AgendaApp ==="
+          xcrun simctl launch "$DEVICE_ID" com.example.Agenda
+
+          echo "=== LAUNCH SUCCESS ==="
+
       - name: Package simulator app
         run: |
           APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -path '*Build/Products/Debug-iphonesimulator/AgendaApp.app' -print -quit)
