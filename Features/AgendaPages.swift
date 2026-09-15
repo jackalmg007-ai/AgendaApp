@@ -30,7 +30,7 @@ struct DayPage: View {
                 year: 2026,
                 month: 9,
                 day: 7
-            )!
+            )
         )!
 
         let offset = spread * 2 + (isLeft ? 0 : 1)
