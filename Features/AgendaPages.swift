@@ -112,7 +112,7 @@ struct MonthPage: View {
                         ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, day in
                             Text(day).font(.caption2.bold())
                         }
-                        ForEach(numbers, id: { $0 + 100 }) { day in
+                        ForEach(numbers, id: \.self) { day in
                             Text("\(day)")
                                 .font(.system(size: 13, weight: .medium, design: .rounded))
                                 .frame(maxWidth: .infinity, minHeight: 31)
