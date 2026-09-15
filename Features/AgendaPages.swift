@@ -109,8 +109,8 @@ struct MonthPage: View {
                     .font(.title2.weight(.semibold))
                 if isLeft {
                     LazyVGrid(columns: columns, spacing: 5) {
-                        ForEach(["M","T","W","T","F","S","S"], id: \.self) {
-                            Text($0).font(.caption2.bold())
+                        ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, day in
+                            Text(day).font(.caption2.bold())
                         }
                         ForEach(numbers, id: \.self) { day in
                             Text("\(day)")
