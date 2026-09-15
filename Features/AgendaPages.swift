@@ -22,28 +22,101 @@ struct DayPage: View {
     let isLeft: Bool
     let spread: Int
 
+    private var pageDate: Date {
+        let calendar = Calendar(identifier: .gregorian)
+
+        let baseDate = calendar.date(
+            from: DateComponents(
+                year: 2026,
+                month: 9,
+                day: 7
+            )!
+        )!
+
+        let offset = spread * 2 + (isLeft ? 0 : 1)
+
+        return calendar.date(
+            byAdding: .day,
+            value: offset,
+            to: baseDate
+        )!
+    }
+
+    private var dayName: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "EEEE"
+
+        return formatter.string(from: pageDate).uppercased()
+    }
+
+    private var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "d MMMM yyyy"
+
+        return formatter.string(from: pageDate)
+    }
+
     var body: some View {
         PaperPage(lined: isLeft) {
             VStack(alignment: .leading, spacing: 14) {
-                Text(isLeft ? "MONDAY" : "TODAY")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
+
+                Text(isLeft ? dayName : "TODAY")
+                    .font(
+                        .system(
+                            size: 12,
+                            weight: .bold,
+                            design: .rounded
+                        )
+                    )
                     .tracking(2)
-                Text("7 September 2026")
-                    .font(.system(size: 26, weight: .semibold, design: .serif))
+
+                Text(formattedDate)
+                    .font(
+                        .system(
+                            size: 26,
+                            weight: .semibold,
+                            design: .serif
+                        )
+                    )
+
                 Divider()
+
                 if isLeft {
+
                     Text("Schedule")
                         .font(.headline)
-                    ForEach(["08:00", "09:00", "10:00", "11:00", "12:00", "13:00"], id: \.self) { time in
+
+                    ForEach(
+                        [
+                            "08:00",
+                            "09:00",
+                            "10:00",
+                            "11:00",
+                            "12:00",
+                            "13:00"
+                        ],
+                        id: \.self
+                    ) { time in
+
                         HStack {
-                            Text(time).font(.caption.monospaced())
-                            Rectangle().fill(.black.opacity(0.12)).frame(height: 1)
+                            Text(time)
+                                .font(.caption.monospaced())
+
+                            Rectangle()
+                                .fill(.black.opacity(0.12))
+                                .frame(height: 1)
                         }
                     }
+
                 } else {
+
                     Text("Notes")
                         .font(.headline)
+
                     Spacer()
+
                     Text("Page \(spread * 2 + 2)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
