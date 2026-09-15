@@ -33,7 +33,10 @@ struct DayPage: View {
             )
         )!
 
-        let offset = spread * 2 + (isLeft ? 0 : 1)
+        // Bir "spread" (sol+sağ sayfa çifti) tek bir günü temsil eder:
+        // sol sayfa o günün programı, sağ sayfa o günün notlarıdır.
+        // Bu yüzden offset isLeft'ten bağımsız, doğrudan spread'e eşittir.
+        let offset = spread
 
         return calendar.date(
             byAdding: .day,
