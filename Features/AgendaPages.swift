@@ -96,8 +96,41 @@ struct MonthPage: View {
     let isLeft: Bool
     let spread: Int
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 5), count: 7)
+    private let columns = Array(
+        repeating: GridItem(.flexible(), spacing: 5),
+        count: 7
+    )
+
     private let numbers = Array(1...30)
+
+    private struct CalendarCell: Identifiable {
+        let id: String
+        let title: String
+        let isWeekday: Bool
+        let dayNumber: Int?
+    }
+
+    private var calendarCells: [CalendarCell] {
+        let weekdays = ["M", "T", "W", "T", "F", "S", "S"].enumerated().map {
+            CalendarCell(
+                id: "weekday-\($0.offset)",
+                title: $0.element,
+                isWeekday: true,
+                dayNumber: nil
+            )
+        }
+
+        let dates = numbers.map {
+            CalendarCell(
+                id: "date-\($0)",
+                title: "\($0)",
+                isWeekday: false,
+                dayNumber: $0
+            )
+        }
+
+        return weekdays + dates
+    }
 
     var body: some View {
         PaperPage(lined: false) {
@@ -105,26 +138,47 @@ struct MonthPage: View {
                 Text(isLeft ? "SEPTEMBER" : "MONTHLY NOTES")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
+
                 Text(isLeft ? "2026" : "September 2026")
                     .font(.title2.weight(.semibold))
+
                 if isLeft {
                     LazyVGrid(columns: columns, spacing: 5) {
-                        ForEach(Array(["M","T","W","T","F","S","S"].enumerated()), id: \.offset) { _, day in
-                            Text(day).font(.caption2.bold())
-                        }
-                        ForEach(numbers, id: \.self) { day in
-                            Text("\(day)")
-                                .font(.system(size: 13, weight: .medium, design: .rounded))
-                                .frame(maxWidth: .infinity, minHeight: 31)
-                                .background(day == 7 ? Color.green.opacity(0.20) : .clear)
-                                .clipShape(RoundedRectangle(cornerRadius: 5))
+                        ForEach(calendarCells) { cell in
+                            if cell.isWeekday {
+                                Text(cell.title)
+                                    .font(.caption2.bold())
+                            } else {
+                                Text(cell.title)
+                                    .font(
+                                        .system(
+                                            size: 13,
+                                            weight: .medium,
+                                            design: .rounded
+                                        )
+                                    )
+                                    .frame(
+                                        maxWidth: .infinity,
+                                        minHeight: 31
+                                    )
+                                    .background(
+                                        cell.dayNumber == 7
+                                            ? Color.green.opacity(0.20)
+                                            : .clear
+                                    )
+                                    .clipShape(
+                                        RoundedRectangle(cornerRadius: 5)
+                                    )
+                            }
                         }
                     }
                 } else {
                     Text("Focus")
                         .font(.headline)
+
                     Text("Use this page for monthly goals, ideas and appointments.")
                         .font(.callout)
+
                     Spacer()
                 }
             }
