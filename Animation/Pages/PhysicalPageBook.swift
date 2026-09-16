@@ -92,7 +92,18 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
         // yaratmamak için önbellek. UIPageViewController, komşu sayfaları
         // (before/after) sıkça yeniden sorguladığı için bu, gereksiz
         // instance üretimini ve buna bağlı appearance-transition çakışmasını azaltır.
-        var pageCache: [Int: AgendaSpreadController] = [:]
+        //
+        // Anahtar hem section hem index içerir: aynı sayısal spread farklı
+        // section'larda farklı şey ifade ediyor (Day'de gün, Week'te hafta,
+        // Month'ta ay). Sadece index ile anahtarlarsak, tab değiştiğinde
+        // başka bir section'a ait eski içerikli controller yeniden
+        // kullanılır ve page-curl animasyonu sırasında bir anlık eski
+        // içerik görünebilirdi.
+        var pageCache: [String: AgendaSpreadController] = [:]
+
+        private func cacheKey(section: AgendaState.Section, index: Int) -> String {
+            "\(section.rawValue)-\(index)"
+        }
 
         // setViewControllers çağrısı devam ederken (özellikle kullanıcı
         // parmakla hızlı art arda sayfa çevirirken) ikinci bir programatik
@@ -113,7 +124,9 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
                 min(index, parent.totalSpreads - 1)
             )
 
-            if let cached = pageCache[safeIndex] {
+            let key = cacheKey(section: parent.state.section, index: safeIndex)
+
+            if let cached = pageCache[key] {
                 return cached
             }
 
@@ -127,7 +140,7 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
                 rootView: page
             )
 
-            pageCache[safeIndex] = controller
+            pageCache[key] = controller
 
             return controller
         }
