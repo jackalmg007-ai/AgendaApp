@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import AudioToolbox
+import SwiftData
 
 // MARK: - Physical Page Book
 
@@ -29,6 +30,12 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
         controller.dataSource = context.coordinator
         controller.delegate = context.coordinator
 
+        // PhysicalPageBook, sayfaları normal SwiftUI ağacının dışında elle
+        // yaratıyor (UIHostingController olarak), bu yüzden .modelContainer
+        // ile yukarıda kurulan modelContext buraya otomatik ulaşmaz — context
+        // üzerinden elle yakalayıp Coordinator'a taşıyoruz.
+        context.coordinator.modelContext = context.environment.modelContext
+
         let initialPage = context.coordinator.makePage(
             index: currentSpread
         )
@@ -56,6 +63,8 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
         guard currentSpread != context.coordinator.displayedSpread else {
             return
         }
+
+        context.coordinator.modelContext = context.environment.modelContext
 
         let direction: UIPageViewController.NavigationDirection =
             currentSpread > context.coordinator.displayedSpread
@@ -106,6 +115,11 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
             "\(section.rawValue)-\(index)"
         }
 
+        // .modelContainer(for:) ile kurulan SwiftData context'i — normal
+        // SwiftUI ağacının dışında yaratılan sayfalara elle taşımak için
+        // makeUIViewController/updateUIViewController içinde güncelleniyor.
+        var modelContext: ModelContext?
+
         // setViewControllers çağrısı devam ederken (özellikle kullanıcı
         // parmakla hızlı art arda sayfa çevirirken) ikinci bir programatik
         // çağrının araya girmesini engeller. Bu, "Unbalanced calls to
@@ -136,9 +150,16 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
                 spread: safeIndex
             )
 
+            let rootView: AnyView
+            if let modelContext {
+                rootView = AnyView(page.modelContext(modelContext))
+            } else {
+                rootView = AnyView(page)
+            }
+
             let controller = AgendaSpreadController(
                 spread: safeIndex,
-                rootView: page
+                rootView: rootView
             )
 
             pageCache[key] = controller
@@ -232,13 +253,13 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
 // MARK: - Agenda Spread Controller
 
 final class AgendaSpreadController:
-    UIHostingController<AgendaSpreadPage> {
+    UIHostingController<AnyView> {
 
     let spread: Int
 
     init(
         spread: Int,
-        rootView: AgendaSpreadPage
+        rootView: AnyView
     ) {
         self.spread = spread
 

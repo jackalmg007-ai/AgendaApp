@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct AgendaSpread: View {
     @Environment(AgendaState.self) private var state
@@ -394,24 +395,90 @@ struct TodoPage: View {
     let isLeft: Bool
     let spread: Int
 
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \TodoItem.createdAt) private var items: [TodoItem]
+
+    @State private var newTitle: String = ""
+
     var body: some View {
         PaperPage(lined: false) {
             VStack(alignment: .leading, spacing: 13) {
-                Text(isLeft ? "YAPILACAKLAR" : "KONTROL LİSTESİ")
+                Text(isLeft ? "YAPILACAKLAR" : "YENİ GÖREV")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
-                Text("Görevler")
-                    .font(.title3.weight(.semibold))
-                ForEach(0..<7, id: \.self) { index in
-                    HStack(spacing: 10) {
-                        Image(systemName: index < 2 ? "checkmark.square" : "square")
-                            .font(.title3)
-                        Text(["Mehmet'i ara", "Projeyi incele", "Rapor hazırla", "Faturayı öde", "Malzeme al", "Notları yaz", "Yarını planla"][index])
-                            .strikethrough(index < 2)
+
+                if isLeft {
+                    Text("Görevler")
+                        .font(.title3.weight(.semibold))
+
+                    if items.isEmpty {
+                        Spacer()
+                        Text("Henüz görev yok. Sağ sayfadan ekleyebilirsin.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    } else {
+                        ScrollView(showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                ForEach(items) { item in
+                                    HStack(spacing: 10) {
+                                        Button {
+                                            item.isDone.toggle()
+                                        } label: {
+                                            Image(systemName: item.isDone ? "checkmark.square" : "square")
+                                                .font(.title3)
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        Text(item.title)
+                                            .strikethrough(item.isDone)
+                                            .foregroundStyle(item.isDone ? .secondary : .primary)
+
+                                        Spacer()
+
+                                        Button {
+                                            modelContext.delete(item)
+                                        } label: {
+                                            Image(systemName: "trash")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                        }
                     }
+                } else {
+                    Text("Yeni Görev Ekle")
+                        .font(.title3.weight(.semibold))
+
+                    TextField("Görev başlığı", text: $newTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit(addItem)
+
+                    Button(action: addItem) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Ekle")
+                        }
+                        .font(.callout.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(newTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .opacity(newTitle.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)
                 }
+
                 Spacer()
             }
         }
+    }
+
+    private func addItem() {
+        let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+
+        modelContext.insert(TodoItem(title: trimmed))
+        newTitle = ""
     }
 }

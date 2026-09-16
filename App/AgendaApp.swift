@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct AgendaApp: App {
@@ -9,5 +10,6 @@ struct AgendaApp: App {
             AgendaShellView()
                 .environment(state)
         }
+        .modelContainer(for: TodoItem.self)
     }
 }
