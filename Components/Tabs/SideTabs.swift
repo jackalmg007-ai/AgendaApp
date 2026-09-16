@@ -28,6 +28,29 @@ struct SideTabs: View {
                         }
                         .buttonStyle(.plain)
                     }
+
+                    // Aktif section'ı kendi anchor'ına (bugün / bu hafta / bu ay) döndürür.
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.20)) {
+                            state.goToToday()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Today")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(.white.opacity(0.78))
+                        .frame(width: 82, height: 34)
+                        .background(
+                            Capsule()
+                                .fill(.black.opacity(0.20))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 6)
+
                     Spacer()
                 }
                 .padding(.top, proxy.safeAreaInsets.top + 18)

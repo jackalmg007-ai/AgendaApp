@@ -34,11 +34,26 @@ final class AgendaState {
     }
 
     var section: Section = .month
-    var currentSpread: Int = 0
     var isFlipping = false
+
+    // Her section kendi son bulunduğu spread'i (sayfa konumunu) ayrı hatırlar.
+    // Örn: Day'de 15. günde iken Week'e geçip geri dönersen, Day yine 15'te kalır.
+    private var spreadsBySection: [Section: Int] = [:]
+
+    var currentSpread: Int {
+        get { spreadsBySection[section] ?? 0 }
+        set { spreadsBySection[section] = newValue }
+    }
 
     func select(_ section: Section) {
         self.section = section
-        currentSpread = 0
+        // NOT: currentSpread burada artık resetlenmiyor — her section
+        // kendi son konumunu spreadsBySection üzerinden korur.
+    }
+
+    // Aktif section'ı kendi "anchor"ına döndürür: Day → bugün,
+    // Week → bu hafta, Month → bu ay (hepsi spread = 0'a karşılık gelir).
+    func goToToday() {
+        spreadsBySection[section] = 0
     }
 }
