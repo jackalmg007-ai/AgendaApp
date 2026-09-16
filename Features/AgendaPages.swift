@@ -134,13 +134,60 @@ struct WeekPage: View {
     let spread: Int
     let days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
 
+    // spread=0 → 7 Eylül 2026'yı içeren hafta (Pazartesi başlangıçlı).
+    // Her spread bir hafta ileri/geri kaydırır.
+    private var weekStartDate: Date {
+        let calendar = Calendar(identifier: .gregorian)
+
+        let baseMonday = calendar.date(
+            from: DateComponents(year: 2026, month: 9, day: 7)
+        )!
+
+        return calendar.date(
+            byAdding: .weekOfYear,
+            value: spread,
+            to: baseMonday
+        )!
+    }
+
+    private var weekNumber: Int {
+        let calendar = Calendar(identifier: .gregorian)
+        return calendar.component(.weekOfYear, from: weekStartDate)
+    }
+
+    private var weekRangeText: String {
+        let calendar = Calendar(identifier: .gregorian)
+        let start = weekStartDate
+        let end = calendar.date(byAdding: .day, value: 6, to: start)!
+
+        let sameMonth = calendar.component(.month, from: start) == calendar.component(.month, from: end)
+        let sameYear = calendar.component(.year, from: start) == calendar.component(.year, from: end)
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+
+        if sameMonth && sameYear {
+            formatter.dateFormat = "d"
+            let startText = formatter.string(from: start)
+            formatter.dateFormat = "d MMMM yyyy"
+            let endText = formatter.string(from: end)
+            return "\(startText)–\(endText)"
+        } else {
+            formatter.dateFormat = "d MMM"
+            let startText = formatter.string(from: start)
+            formatter.dateFormat = "d MMM yyyy"
+            let endText = formatter.string(from: end)
+            return "\(startText) – \(endText)"
+        }
+    }
+
     var body: some View {
         PaperPage(lined: false) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(isLeft ? "WEEK 37" : "WEEK PLAN")
+                Text(isLeft ? "WEEK \(weekNumber)" : "WEEK PLAN")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
-                Text("7–13 September 2026")
+                Text(weekRangeText)
                     .font(.title3.weight(.semibold))
                 if isLeft {
                     VStack(spacing: 0) {
@@ -177,7 +224,54 @@ struct MonthPage: View {
         count: 7
     )
 
-    private let numbers = Array(1...30)
+    // spread=0 → Eylül 2026. Her spread bir ay ileri/geri kaydırır.
+    private var monthDate: Date {
+        let calendar = Calendar(identifier: .gregorian)
+
+        let baseMonth = calendar.date(
+            from: DateComponents(year: 2026, month: 9, day: 1)
+        )!
+
+        return calendar.date(
+            byAdding: .month,
+            value: spread,
+            to: baseMonth
+        )!
+    }
+
+    private var monthNameText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "MMMM"
+        return formatter.string(from: monthDate).uppercased()
+    }
+
+    private var yearText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "yyyy"
+        return formatter.string(from: monthDate)
+    }
+
+    private var monthYearText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: monthDate)
+    }
+
+    private var daysInMonth: Int {
+        let calendar = Calendar(identifier: .gregorian)
+        return calendar.range(of: .day, in: .month, for: monthDate)?.count ?? 30
+    }
+
+    // Ayın 1'i haftanın hangi gününe denk geliyor (Pazartesi=0 ... Pazar=6),
+    // grid'in başına o kadar boş hücre eklenir.
+    private var leadingBlankCount: Int {
+        let calendar = Calendar(identifier: .gregorian)
+        let weekday = calendar.component(.weekday, from: monthDate) // 1=Pazar ... 7=Cumartesi
+        return (weekday + 5) % 7
+    }
 
     private struct CalendarCell: Identifiable {
         let id: String
@@ -196,7 +290,16 @@ struct MonthPage: View {
             )
         }
 
-        let dates = numbers.map {
+        let leading = (0..<leadingBlankCount).map {
+            CalendarCell(
+                id: "blank-\($0)",
+                title: "",
+                isWeekday: false,
+                dayNumber: nil
+            )
+        }
+
+        let dates = (1...daysInMonth).map {
             CalendarCell(
                 id: "date-\($0)",
                 title: "\($0)",
@@ -205,17 +308,17 @@ struct MonthPage: View {
             )
         }
 
-        return weekdays + dates
+        return weekdays + leading + dates
     }
 
     var body: some View {
         PaperPage(lined: false) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(isLeft ? "SEPTEMBER" : "MONTHLY NOTES")
+                Text(isLeft ? monthNameText : "MONTHLY NOTES")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
 
-                Text(isLeft ? "2026" : "September 2026")
+                Text(isLeft ? yearText : monthYearText)
                     .font(.title2.weight(.semibold))
 
                 if isLeft {
@@ -238,7 +341,7 @@ struct MonthPage: View {
                                         minHeight: 31
                                     )
                                     .background(
-                                        cell.dayNumber == 7
+                                        (spread == 0 && cell.dayNumber == 7)
                                             ? Color.green.opacity(0.20)
                                             : .clear
                                     )
