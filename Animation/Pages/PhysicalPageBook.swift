@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import AudioToolbox
 
 // MARK: - Physical Page Book
 
@@ -210,6 +211,15 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
             }
 
             displayedSpread = visible.spread
+
+            // Her tamamlanan sayfa çevirişinde hafif bir dokunsal geri bildirim —
+            // hem parmakla hem programatik (Today/tab) geçişlerde tetiklenir.
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+            // iOS sistem sesi (ID 1104, "Tock") — resmi olmayan ama yaygın
+            // kullanılan bir kısa tık sesi. Gerçek bir kağıt sesi asseti
+            // eklendiğinde AVAudioPlayer ile kolayca değiştirilebilir.
+            AudioServicesPlaySystemSound(1104)
 
             DispatchQueue.main.async {
                 self.parent.currentSpread = visible.spread

@@ -1,4 +1,6 @@
 import SwiftUI
+import UIKit
+import AudioToolbox
 
 struct SideTabs: View {
     @Environment(AgendaState.self) private var state
@@ -9,6 +11,10 @@ struct SideTabs: View {
                 VStack(spacing: 7) {
                     ForEach(AgendaState.Section.allCases) { item in
                         Button {
+                            UISelectionFeedbackGenerator().selectionChanged()
+                            // ID 1057 ("Tink") — sayfa çevirmeden (1104) daha hafif/ince,
+                            // sekme geçişini ayırt etmek için.
+                            AudioServicesPlaySystemSound(1057)
                             withAnimation(.easeInOut(duration: 0.20)) {
                                 state.select(item)
                             }
@@ -31,6 +37,8 @@ struct SideTabs: View {
 
                     // Aktif section'ı kendi anchor'ına (bugün / bu hafta / bu ay) döndürür.
                     Button {
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        AudioServicesPlaySystemSound(1057)
                         withAnimation(.easeInOut(duration: 0.20)) {
                             state.goToToday()
                         }
