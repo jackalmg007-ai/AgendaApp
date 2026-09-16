@@ -12,6 +12,18 @@ final class AgendaState {
 
         var id: String { rawValue }
 
+        // Ekranda gösterilen Türkçe ad. rawValue kasıtlı olarak İngilizce/sabit
+        // bırakıldı çünkü PhysicalPageBook'taki page cache anahtarında kullanılıyor.
+        var displayName: String {
+            switch self {
+            case .day: "Gün"
+            case .week: "Hafta"
+            case .month: "Ay"
+            case .notes: "Notlar"
+            case .todo: "Yapılacaklar"
+            }
+        }
+
         var icon: String {
             switch self {
             case .day: "sun.max"

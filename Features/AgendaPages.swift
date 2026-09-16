@@ -47,15 +47,16 @@ struct DayPage: View {
 
     private var dayName: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "EEEE"
 
-        return formatter.string(from: pageDate).uppercased()
+        return formatter.string(from: pageDate)
+            .uppercased(with: Locale(identifier: "tr_TR"))
     }
 
     private var formattedDate: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "d MMMM yyyy"
 
         return formatter.string(from: pageDate)
@@ -65,7 +66,7 @@ struct DayPage: View {
         PaperPage(lined: isLeft) {
             VStack(alignment: .leading, spacing: 14) {
 
-                Text(isLeft ? dayName : "TODAY")
+                Text(isLeft ? dayName : "BUGÜN")
                     .font(
                         .system(
                             size: 12,
@@ -88,7 +89,7 @@ struct DayPage: View {
 
                 if isLeft {
 
-                    Text("Schedule")
+                    Text("Program")
                         .font(.headline)
 
                     ForEach(
@@ -115,12 +116,12 @@ struct DayPage: View {
 
                 } else {
 
-                    Text("Notes")
+                    Text("Notlar")
                         .font(.headline)
 
                     Spacer()
 
-                    Text("Page \(spread * 2 + 2)")
+                    Text("Sayfa \(spread * 2 + 2)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -132,7 +133,7 @@ struct DayPage: View {
 struct WeekPage: View {
     let isLeft: Bool
     let spread: Int
-    let days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+    let days = ["PZT", "SAL", "ÇAR", "PER", "CUM", "CMT", "PAZ"]
 
     // spread=0 → 7 Eylül 2026'yı içeren hafta (Pazartesi başlangıçlı).
     // Her spread bir hafta ileri/geri kaydırır.
@@ -164,7 +165,7 @@ struct WeekPage: View {
         let sameYear = calendar.component(.year, from: start) == calendar.component(.year, from: end)
 
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: "tr_TR")
 
         if sameMonth && sameYear {
             formatter.dateFormat = "d"
@@ -184,7 +185,7 @@ struct WeekPage: View {
     var body: some View {
         PaperPage(lined: false) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(isLeft ? "WEEK \(weekNumber)" : "WEEK PLAN")
+                Text(isLeft ? "HAFTA \(weekNumber)" : "HAFTA PLANI")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
                 Text(weekRangeText)
@@ -200,12 +201,12 @@ struct WeekPage: View {
                         }
                     }
                 } else {
-                    Text("Priorities")
+                    Text("Öncelikler")
                         .font(.headline)
                     ForEach(1...6, id: \.self) { index in
                         HStack {
                             Image(systemName: "square")
-                            Text("Priority item \(index)")
+                            Text("Öncelik \(index)")
                         }
                     }
                 }
@@ -241,21 +242,22 @@ struct MonthPage: View {
 
     private var monthNameText: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "MMMM"
-        return formatter.string(from: monthDate).uppercased()
+        return formatter.string(from: monthDate)
+            .uppercased(with: Locale(identifier: "tr_TR"))
     }
 
     private var yearText: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "yyyy"
         return formatter.string(from: monthDate)
     }
 
     private var monthYearText: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: "tr_TR")
         formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: monthDate)
     }
@@ -281,7 +283,7 @@ struct MonthPage: View {
     }
 
     private var calendarCells: [CalendarCell] {
-        let weekdays = ["M", "T", "W", "T", "F", "S", "S"].enumerated().map {
+        let weekdays = ["P", "S", "Ç", "P", "C", "C", "P"].enumerated().map {
             CalendarCell(
                 id: "weekday-\($0.offset)",
                 title: $0.element,
@@ -314,7 +316,7 @@ struct MonthPage: View {
     var body: some View {
         PaperPage(lined: false) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(isLeft ? monthNameText : "MONTHLY NOTES")
+                Text(isLeft ? monthNameText : "AYLIK NOTLAR")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
 
@@ -352,10 +354,10 @@ struct MonthPage: View {
                         }
                     }
                 } else {
-                    Text("Focus")
+                    Text("Odak")
                         .font(.headline)
 
-                    Text("Use this page for monthly goals, ideas and appointments.")
+                    Text("Bu sayfayı aylık hedefler, fikirler ve randevular için kullan.")
                         .font(.callout)
 
                     Spacer()
@@ -372,15 +374,15 @@ struct NotesPage: View {
     var body: some View {
         PaperPage(lined: true) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(isLeft ? "NOTES" : "IDEAS")
+                Text(isLeft ? "NOTLAR" : "FİKİRLER")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
-                Text("Notebook page")
+                Text("Not defteri sayfası")
                     .font(.title3.weight(.semibold))
                 Spacer()
-                Text("Tap here later to edit this page.")
+                Text("Bu sayfayı düzenlemek için daha sonra buraya dokun.")
                     .foregroundStyle(.secondary)
-                Text("Spread \(spread + 1)")
+                Text("Sayfa \(spread + 1)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -395,16 +397,16 @@ struct TodoPage: View {
     var body: some View {
         PaperPage(lined: false) {
             VStack(alignment: .leading, spacing: 13) {
-                Text(isLeft ? "TO-DO" : "CHECKLIST")
+                Text(isLeft ? "YAPILACAKLAR" : "KONTROL LİSTESİ")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .tracking(2)
-                Text("Things to do")
+                Text("Görevler")
                     .font(.title3.weight(.semibold))
                 ForEach(0..<7, id: \.self) { index in
                     HStack(spacing: 10) {
                         Image(systemName: index < 2 ? "checkmark.square" : "square")
                             .font(.title3)
-                        Text(["Call Mehmet", "Review project", "Prepare report", "Pay bill", "Buy supplies", "Write notes", "Plan tomorrow"][index])
+                        Text(["Mehmet'i ara", "Projeyi incele", "Rapor hazırla", "Faturayı öde", "Malzeme al", "Notları yaz", "Yarını planla"][index])
                             .strikethrough(index < 2)
                     }
                 }

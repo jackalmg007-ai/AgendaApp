@@ -22,7 +22,7 @@ struct SideTabs: View {
                             HStack(spacing: 8) {
                                 Image(systemName: item.icon)
                                     .font(.system(size: 12, weight: .semibold))
-                                Text(item.rawValue)
+                                Text(item.displayName)
                                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                             }
                             .foregroundStyle(item == state.section ? .white : .white.opacity(0.78))
@@ -46,7 +46,7 @@ struct SideTabs: View {
                         HStack(spacing: 8) {
                             Image(systemName: "clock.arrow.circlepath")
                                 .font(.system(size: 12, weight: .semibold))
-                            Text("Today")
+                            Text("Bugün")
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                         }
                         .foregroundStyle(.white.opacity(0.78))
