@@ -48,6 +48,10 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
         context: Context
     ) {
 
+        guard !context.coordinator.isTransitioning else {
+            return
+        }
+
         guard currentSpread != context.coordinator.displayedSpread else {
             return
         }
@@ -61,13 +65,16 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
             index: currentSpread
         )
 
+        context.coordinator.displayedSpread = currentSpread
+        context.coordinator.isTransitioning = true
+
         controller.setViewControllers(
             [page],
             direction: direction,
             animated: true
-        )
-
-        context.coordinator.displayedSpread = currentSpread
+        ) { _ in
+            context.coordinator.isTransitioning = false
+        }
     }
 
     // MARK: - Coordinator
@@ -80,6 +87,18 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
         let parent: PhysicalPageBook
 
         var displayedSpread: Int = 0
+
+        // Aynı spread index için AgendaSpreadController'ı tekrar tekrar
+        // yaratmamak için önbellek. UIPageViewController, komşu sayfaları
+        // (before/after) sıkça yeniden sorguladığı için bu, gereksiz
+        // instance üretimini ve buna bağlı appearance-transition çakışmasını azaltır.
+        var pageCache: [Int: AgendaSpreadController] = [:]
+
+        // setViewControllers çağrısı devam ederken (özellikle kullanıcı
+        // parmakla hızlı art arda sayfa çevirirken) ikinci bir programatik
+        // çağrının araya girmesini engeller. Bu, "Unbalanced calls to
+        // begin/end appearance transitions" uyarısının en olası sebebiydi.
+        var isTransitioning = false
 
         init(_ parent: PhysicalPageBook) {
             self.parent = parent
@@ -94,15 +113,23 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
                 min(index, parent.totalSpreads - 1)
             )
 
+            if let cached = pageCache[safeIndex] {
+                return cached
+            }
+
             let page = AgendaSpreadPage(
                 state: parent.state,
                 spread: safeIndex
             )
 
-            return AgendaSpreadController(
+            let controller = AgendaSpreadController(
                 spread: safeIndex,
                 rootView: page
             )
+
+            pageCache[safeIndex] = controller
+
+            return controller
         }
 
         // MARK: - Previous Page
