@@ -330,10 +330,17 @@ struct AgendaSpreadPage: View {
 
         GeometryReader { proxy in
 
+            // NOT: sayfa genişliğinde eskiden sabit bir "en az 180pt" alt
+            // sınırı vardı. iPhone gibi dar ekranlarda bu, iki sayfanın
+            // toplamının fiilen kullanılabilir genişlikten daha geniş
+            // olmasına ve sağ sayfanın ekranın dışına taşıp görünmez/
+            // dokunulmaz hale gelmesine sebep oluyordu. Alt sınırı,
+            // gerçekten çok küçük/patolojik durumlar dışında devreye
+            // girmeyecek kadar düşük (100pt) tutuyoruz.
             let pageSize = CGSize(
                 width: max(
                     (proxy.size.width - 46) / 2,
-                    180
+                    100
                 ),
                 height: max(
                     proxy.size.height - 36,
