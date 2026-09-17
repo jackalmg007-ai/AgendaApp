@@ -21,6 +21,7 @@ targets:
       - path: Components
       - path: Animation
       - path: Features
+      - path: Models
     settings:
       base:
         INFOPLIST_FILE: Config/Info.plist
