@@ -30,6 +30,16 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
         controller.dataSource = context.coordinator
         controller.delegate = context.coordinator
 
+        // UIPageViewController'ın kendi page-curl pan gesture'ı, içerikteki
+        // TextField/Button gibi etkileşimli SwiftUI kontrollerine giden
+        // dokunuşu kendine alabiliyor (metin kutusuna dokunulduğunda klavye
+        // yerine sayfanın çevrilmesi tam olarak bundandı). Bu gesture'lara
+        // delegate atayıp, dokunuş etkileşimli bir kontrolün üzerindeyse
+        // gesture'ın devreye girmesini engelliyoruz.
+        for gestureRecognizer in controller.view.gestureRecognizers ?? [] {
+            gestureRecognizer.delegate = context.coordinator
+        }
+
         // PhysicalPageBook, sayfaları normal SwiftUI ağacının dışında elle
         // yaratıyor (UIHostingController olarak), bu yüzden .modelContainer
         // ile yukarıda kurulan modelContext buraya otomatik ulaşmaz — context
@@ -92,7 +102,8 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
     final class Coordinator:
         NSObject,
         UIPageViewControllerDataSource,
-        UIPageViewControllerDelegate {
+        UIPageViewControllerDelegate,
+        UIGestureRecognizerDelegate {
 
         let parent: PhysicalPageBook
 
@@ -245,6 +256,37 @@ struct PhysicalPageBook: UIViewControllerRepresentable {
             DispatchQueue.main.async {
                 self.parent.currentSpread = visible.spread
             }
+        }
+
+        // MARK: - Gesture vs. Interactive Control
+
+        // Dokunuş bir metin kutusu, buton gibi klavye/etkileşim isteyen bir
+        // kontrolün üzerindeyse, page-curl gesture'ının bu dokunuşu
+        // almasını engeller — böylece dokunuş normal şekilde SwiftUI
+        // içeriğine (TextField, Button vb.) ulaşabilir.
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldReceive touch: UITouch
+        ) -> Bool {
+
+            guard let view = touch.view else {
+                return true
+            }
+
+            return !isInteractiveControl(view)
+        }
+
+        private func isInteractiveControl(_ view: UIView) -> Bool {
+            var current: UIView? = view
+
+            while let v = current {
+                if v is UIControl || v.canBecomeFirstResponder {
+                    return true
+                }
+                current = v.superview
+            }
+
+            return false
         }
     }
 }
